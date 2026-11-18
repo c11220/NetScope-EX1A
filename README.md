@@ -6,6 +6,9 @@ NetScope 是一个运行在 Windows 上的桌面抓包与分析工具。抓包�
 **Npcap / libpcap**，分析层自行实现协议树、显示过滤器、TCP 流重组与进程归因，
 界面基于 **PySide6 (Qt 6)**。
 
+> 仓库地址：https://github.com/c11220/NetScope-EX1A
+> 课程：中国科学院大学《软件与系统安全》实验 1A
+
 ## 功能
 
 | 层次 | 能力 |
