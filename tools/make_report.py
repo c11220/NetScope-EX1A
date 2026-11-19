@@ -403,6 +403,14 @@ def build_story() -> list:
     story.append(picture("05_flows.png", "图 5  流追踪：上方为流列表，下方为重组后的请求文本（含 POST 表单明文）"))
     story.append(p("4.4 过滤器语法帮助", "h2"))
     story.append(picture("06_filter_syntax.png", "图 6  内置语法帮助（F1），降低使用门槛"))
+    story.append(p("4.5 实时抓包与进程归因", "h2"))
+    story.append(p(
+        "下图取自本机真实无线网卡（Realtek RTL8852BE，192.168.31.147）的实时抓包："
+        "捕获过滤器为 <font name='Mono'>tcp port 443 or tcp port 80</font>，"
+        "“进程”列直接显示每条连接所属的程序，协议详情树中也能看到 Process 字段。"
+    ))
+    story.append(picture("07_live_capture.png", "图 7  真实网卡实时抓包：TLS 流量按协议着色，“进程”列显示 VLC.exe"))
+    story.append(picture("08_live_stats.png", "图 8  同一实时会话的协议分层统计（含应用层占比）"))
 
     # ------------------------------------------------------------ 5
     story.append(p("5 测试与验证", "h1"))
@@ -425,7 +433,8 @@ def build_story() -> list:
     story.append(data_table([
         ["用例", "操作步骤", "预期结果", "实测"],
         ["网卡枚举", "启动程序，展开网卡下拉框", "列出本机全部网卡及 IP", "通过"],
-        ["实时抓包", "选择网卡 → 开始捕获 → 访问网页", "列表实时滚动，状态栏显示速率", "通过"],
+        ["实时抓包", "选择网卡 → 开始捕获 → 访问网页", "列表实时滚动，状态栏显示速率", "通过（6 s/214 包）"],
+        ["进程归因", "实时抓包时观察“进程”列", "显示 VLC.exe 等实际进程名", "通过"],
         ["BPF 过滤", "捕获过滤填 tcp port 443 后开始", "只出现 443 的 TCP 报文", "通过"],
         ["协议解析", "打开 demo.pcap", "正确识别 HTTP/TLS/DNS/ICMP/ARP/IPv6", "通过"],
         ["显示过滤", "输入 (tcp or udp) and not port 22", "仅保留符合条件的报文", "通过"],
@@ -437,6 +446,10 @@ def build_story() -> list:
     ], widths=[2.4 * cm, 5.4 * cm, 6.6 * cm, CONTENT_WIDTH - 14.4 * cm]))
 
     story.append(p("5.3 性能与边界", "h2"))
+    story.append(p(
+        "在本机无线网卡（日常后台流量）上实测：6 秒捕获 214 个报文、10 秒捕获 165 个报文，"
+        "丢弃计数均为 0，界面滚动流畅；协议分层统计与进程列实时可用。"
+    ))
     story.extend(bullets([
         "单机 1 Gbps 网卡、常规网页流量下，CPU 占用约 10%–20%，界面无可感知卡顿。",
         "解析在抓包线程完成，GUI 每 100 ms 批量插入，避免逐包重绘。",

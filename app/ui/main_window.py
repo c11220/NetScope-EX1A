@@ -376,8 +376,10 @@ class MainWindow(QMainWindow):
         lookup = resolver.lookup
         for record in records:
             if record.sport is not None:
+                # 传输层协议由 layers 决定：proto 字段此时可能已是 TLS/HTTP 等应用层标签
+                transport = "TCP" if "tcp" in record.layers else "UDP"
                 record.pid, record.pname = lookup(
-                    record.proto, record.src, record.dst, record.sport, record.dport
+                    transport, record.src, record.dst, record.sport, record.dport
                 )
             self.stats.feed(record)
             self.flows.feed_record(record)
