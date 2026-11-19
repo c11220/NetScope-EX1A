@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ..core.capture import CaptureController, Interface, list_interfaces
+from ..core.capture import CaptureController, Interface, list_interfaces, npcap_ready
 from ..core.filter_engine import DisplayFilter, FilterSyntaxError, validate
 from ..core.flows import FlowRegistry
 from ..core.pcap_io import load_pcap, save_pcap
@@ -330,6 +330,11 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "无法开始捕获",
                                 "没有可用网卡。\n请先安装 Npcap（https://npcap.com），"
                                 "并勾选“Install Npcap in WinPcap API-compatible Mode”。")
+            return
+
+        ready, reason = npcap_ready()
+        if not ready:
+            QMessageBox.warning(self, "Npcap 驱动不可用", reason)
             return
 
         bpf = self.capture_filter.text().strip()

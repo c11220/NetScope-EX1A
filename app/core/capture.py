@@ -9,6 +9,7 @@
 
 from __future__ import annotations
 
+import os
 import platform
 import queue
 import time
@@ -19,6 +20,30 @@ from PySide6.QtCore import QObject, QTimer, Signal
 
 from .dissector import dissect
 from .models import PacketRecord
+
+# Windows 下 Npcap 安装后必然存在的驱动文件
+_NPCAP_SYS = r"C:\Windows\System32\drivers\npcap.sys"
+
+# 这些是 NDIS 过滤驱动生成的伪设备，无法独立抓包
+_PSEUDO_KEYWORDS = (
+    "LightWeight Filter", "QoS Packet Scheduler", "WFP ",
+    "Virtual WiFi Filter", "Scheduler-0000", "Filter-0000",
+)
+
+
+def npcap_ready() -> tuple[bool, str]:
+    """检查 Npcap 驱动是否真正可用（仅 Windows）。"""
+    if platform.system() != "Windows":
+        return True, ""
+    if os.path.exists(_NPCAP_SYS):
+        return True, ""
+    return False, (
+        "未检测到 Npcap 驱动（C:\\Windows\\System32\\drivers\\npcap.sys 不存在）。\n\n"
+        "请安装 Npcap：https://npcap.com\n"
+        "安装向导弹出时务必完成全部步骤，并勾选：\n"
+        "    Install Npcap in WinPcap API-compatible Mode\n"
+        "安装完成后重新启动本程序，并以管理员身份运行。"
+    )
 
 
 @dataclass(slots=True)
@@ -51,14 +76,20 @@ def list_interfaces() -> list[Interface]:
                 device = f"\\Device\\NPF_{guid}" if guid else ""
                 if not device:
                     continue
+                name = item.get("description") or item.get("name") or "unknown"
+                if any(keyword.lower() in name.lower() for keyword in _PSEUDO_KEYWORDS):
+                    continue
                 ips = [ip for ip in (item.get("ips") or []) if ip and not ip.startswith("fe80")]
+                mac = item.get("mac") or ""
+                if not ips and not mac:
+                    continue
                 result.append(
                     Interface(
-                        name=item.get("description") or item.get("name") or "unknown",
+                        name=name,
                         device=device,
                         description=item.get("name") or "",
                         ips=ips,
-                        mac=item.get("mac") or "",
+                        mac=mac,
                     )
                 )
         except Exception:
